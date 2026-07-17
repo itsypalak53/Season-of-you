@@ -28,3 +28,16 @@ function skyForHour(h) {
 const hour = new Date().getHours();
 const sky = skyForHour(hour);
 
+function drawSky() {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, sky.top);
+  grad.addColorStop(1, sky.bottom);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  drawSky();
+}
+animate();
