@@ -33,3 +33,15 @@ html, body {
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
 }
 
+#season-label {
+  position: absolute;
+  top: 22px;
+  left: 26px;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
