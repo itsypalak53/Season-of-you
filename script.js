@@ -74,6 +74,16 @@ for (let i = 0; i < 6; i++) {
     sway: Math.random() * Math.PI * 2
   });
 }
+// bird positions, generated once
+const birds = [];
+for (let i = 0; i < 4; i++) {
+  birds.push({
+    x: Math.random(),
+    y: 0.15 + Math.random() * 0.15,
+    speed: 0.02 + Math.random() * 0.02,
+    phase: Math.random() * 10
+  });
+}
 
 function drawGround() {
   ctx.fillStyle = '#7bc65e'; // spring/summer green for now, we'll make this season-driven later
@@ -142,6 +152,28 @@ function drawTrees() {
     ctx.fill();
   });
 }
+function drawBirds() {
+  if (sky.night) return; // no birds at night
+
+  const now = performance.now();
+
+  birds.forEach((b) => {
+    b.x += b.speed * 0.003;
+    if (b.x > 1.1) b.x = -0.1; // loop back around once it flies off screen
+
+    const bx = b.x * W;
+    const by = b.y * H + Math.sin(now * 0.003 + b.phase) * 8;
+    const flap = Math.sin(now * 0.01 + b.phase) * 6;
+
+    ctx.strokeStyle = 'rgba(40,30,50,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bx - 8, by + flap);
+    ctx.lineTo(bx, by - 3);
+    ctx.lineTo(bx + 8, by + flap);
+    ctx.stroke();
+  });
+}
 function animate() {
   requestAnimationFrame(animate);
   drawSky();
@@ -149,5 +181,6 @@ function animate() {
   drawGround();
   drawHouses();
   drawTrees();
+  drawBirds();
 }
 animate();
