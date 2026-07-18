@@ -65,6 +65,15 @@ for (let i = 0; i < 4; i++) {
     roof: Math.random() > 0.5 ? '#c65b4a' : '#7a5a8a'
   });
 }
+// tree positions, generated once
+const trees = [];
+for (let i = 0; i < 6; i++) {
+  trees.push({
+    x: Math.random(),
+    scale: 0.6 + Math.random() * 0.7,
+    sway: Math.random() * Math.PI * 2
+  });
+}
 
 function drawGround() {
   ctx.fillStyle = '#7bc65e'; // spring/summer green for now, we'll make this season-driven later
@@ -104,11 +113,41 @@ function drawHouses() {
     ctx.fillRect(hx + hw * 0.35, hy - hh * 0.55, hw * 0.3, hw * 0.3);
   });
 }
+function drawTrees() {
+  const now = performance.now();
+
+  trees.forEach((tr) => {
+    const tx = tr.x * W;
+    const ty = H * 0.79;
+    const sway = Math.sin(now * 0.0006 + tr.sway) * 4;
+    const th = 70 * tr.scale;
+
+    // trunk
+    ctx.strokeStyle = '#5c4433';
+    ctx.lineWidth = 6 * tr.scale;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx + sway, ty - th);
+    ctx.stroke();
+
+    // foliage — two overlapping blobs for a fuller look
+    ctx.fillStyle = '#3f8f4a';
+    ctx.beginPath();
+    ctx.arc(tx + sway, ty - th, 30 * tr.scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#2b6a34';
+    ctx.beginPath();
+    ctx.arc(tx + sway - 12 * tr.scale, ty - th + 8 * tr.scale, 18 * tr.scale, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
 function animate() {
   requestAnimationFrame(animate);
   drawSky();
   drawSun();
   drawGround();
   drawHouses();
+  drawTrees();
 }
 animate();
