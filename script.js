@@ -155,3 +155,8 @@ function drawHouses() {
     ctx.lineTo(hx + hw + 5, hy - hh);
     ctx.closePath();
     ctx.fill();
+    const lit = sky.night || sky.dayProg < 0.25;
+    ctx.fillStyle = lit ? 'rgba(255,214,140,0.9)' : 'rgba(60,50,70,0.5)';
+    ctx.fillRect(hx + hw * 0.35, hy - hh * 0.55, hw * 0.3, hw * 0.3);
+  });
+}
