@@ -143,27 +143,3 @@ function drawGround() {
   ctx.fill();
 }
 
-function drawHouses() {
-  houses.forEach((h) => {
-    const hx = h.x * W;
-    const hw = h.w * W;
-    const hy = H * 0.72;
-    const hh = hw * 0.8;
-
-    ctx.fillStyle = '#5a4a63';
-    ctx.fillRect(hx, hy - hh, hw, hh);
-
-    ctx.fillStyle = h.roof;
-    ctx.beginPath();
-    ctx.moveTo(hx - 5, hy - hh);
-    ctx.lineTo(hx + hw / 2, hy - hh - hw * 0.5);
-    ctx.lineTo(hx + hw + 5, hy - hh);
-    ctx.closePath();
-    ctx.fill();
-
-    const lit = sky.night || sky.dayProg < 0.25;
-    ctx.fillStyle = lit ? 'rgba(255,214,140,0.9)' : 'rgba(60,50,70,0.5)';
-    ctx.fillRect(hx + hw * 0.35, hy - hh * 0.55, hw * 0.3, hw * 0.3);
-  });
-}
-
