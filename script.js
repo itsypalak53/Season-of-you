@@ -77,3 +77,24 @@ for (let i = 0; i < 4; i++) {
     phase: Math.random() * 10
   });
 }
+// behavior tracking
+let lastMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+let velocity = 0;
+let idleTime = 0;
+let lastFrame = performance.now();
+let seasonPos = 0; // 0 = spring, 1 = summer, 2 = autumn, 3 = winter (blends between)
+
+window.addEventListener('mousemove', (e) => {
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+  velocity = Math.min(Math.sqrt(dx * dx + dy * dy), 60);
+  lastMouse = { x: e.clientX, y: e.clientY };
+  idleTime = 0;
+});
+
+function targetSeasonIndex() {
+  if (idleTime > 14) return 3; // winter: long stillness
+  if (idleTime > 5) return 2;  // autumn: settling down
+  if (velocity > 22) return 1; // summer: energetic movement
+  return 0;                    // spring: calm, gentle movement
+}
