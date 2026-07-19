@@ -167,3 +167,20 @@ function drawTrees() {
   const t = seasonPos - Math.floor(seasonPos);
   const foliage = hexLerp(SEASON_COLORS.foliage[idxA], SEASON_COLORS.foliage[idxB], t);
   const foliageDark = hexLerp(SEASON_COLORS.foliageDark[idxA], SEASON_COLORS.foliageDark[idxB], t);
+trees.forEach((tr) => {
+    const tx = tr.x * W;
+    const ty = H * 0.79;
+    const sway = Math.sin(now * 0.0006 + tr.sway) * 4;
+    const th = 70 * tr.scale;
+
+    ctx.strokeStyle = '#5c4433';
+    ctx.lineWidth = 6 * tr.scale;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx + sway, ty - th);
+    ctx.stroke();
+
+    ctx.fillStyle = foliage;
+    ctx.beginPath();
+    ctx.arc(tx + sway, ty - th, 30 * tr.scale, 0, Math.PI * 2);
+    ctx.fill();
