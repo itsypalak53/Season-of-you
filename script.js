@@ -11,6 +11,25 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
+// season setup
+const SEASON_NAMES = ['spring', 'summer', 'autumn', 'winter'];
+const SEASON_COLORS = {
+  foliage:     ['#f3b6d3', '#3f8f4a', '#d9822b', '#7a8a94'],
+  foliageDark: ['#d98cb0', '#2b6a34', '#a9601c', '#5c6b74'],
+  ground:      ['#bfe3a0', '#7bc65e', '#c9955a', '#eef2f5']
+};
+
+// blends two hex colors together, t = 0 (fully colorA) to 1 (fully colorB)
+function hexLerp(hexA, hexB, t) {
+  const a = parseInt(hexA.slice(1), 16), b = parseInt(hexB.slice(1), 16);
+  const ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
+  const br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bl = Math.round(ab + (bb - ab) * t);
+  return `rgb(${r},${g},${bl})`;
+}
+
 // returns sky colors based on the real hour of day
 function skyForHour(h) {
   if (h >= 5 && h < 8) {
@@ -28,6 +47,59 @@ function skyForHour(h) {
 const hour = new Date().getHours();
 const sky = skyForHour(hour);
 
+// houses, generated once
+const houses = [];
+for (let i = 0; i < 4; i++) {
+  houses.push({
+    x: 0.12 + i * 0.22 + Math.random() * 0.05,
+    w: 0.07 + Math.random() * 0.02,
+    roof: Math.random() > 0.5 ? '#c65b4a' : '#7a5a8a'
+  });
+}
+
+// trees, generated once
+const trees = [];
+for (let i = 0; i < 6; i++) {
+  trees.push({
+    x: Math.random(),
+    scale: 0.6 + Math.random() * 0.7,
+    sway: Math.random() * Math.PI * 2
+  });
+}
+
+// birds, generated once
+const birds = [];
+for (let i = 0; i < 4; i++) {
+  birds.push({
+    x: Math.random(),
+    y: 0.15 + Math.random() * 0.15,
+    speed: 0.02 + Math.random() * 0.02,
+    phase: Math.random() * 10
+  });
+}
+
+// behavior tracking
+let lastMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+let velocity = 0;
+let idleTime = 0;
+let lastFrame = performance.now();
+let seasonPos = 0; // 0 = spring, 1 = summer, 2 = autumn, 3 = winter (blends between)
+
+window.addEventListener('mousemove', (e) => {
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+  velocity = Math.min(Math.sqrt(dx * dx + dy * dy), 60);
+  lastMouse = { x: e.clientX, y: e.clientY };
+  idleTime = 0;
+});
+
+function targetSeasonIndex() {
+  if (idleTime > 14) return 3; // winter: long stillness
+  if (idleTime > 5) return 2;  // autumn: settling down
+  if (velocity > 22) return 1; // summer: energetic movement
+  return 0;                    // spring: calm, gentle movement
+}
+
 function drawSky() {
   const grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, sky.top);
@@ -40,7 +112,6 @@ function drawSun() {
   const sunX = W * (0.15 + 0.7 * sky.dayProg);
   const sunY = H * (0.55 - 0.4 * Math.sin(sky.dayProg * Math.PI));
 
-  // soft glow around it
   const glow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 90);
   glow.addColorStop(0, sky.sun);
   glow.addColorStop(1, 'rgba(255,255,255,0)');
@@ -49,44 +120,19 @@ function drawSun() {
   ctx.arc(sunX, sunY, 90, 0, Math.PI * 2);
   ctx.fill();
 
-  // the solid disc itself
   ctx.fillStyle = sky.sun;
   ctx.beginPath();
   ctx.arc(sunX, sunY, 26, 0, Math.PI * 2);
   ctx.fill();
 }
 
-// house positions and roof colors, generated once
-const houses = [];
-for (let i = 0; i < 4; i++) {
-  houses.push({
-    x: 0.12 + i * 0.22 + Math.random() * 0.05,
-    w: 0.07 + Math.random() * 0.02,
-    roof: Math.random() > 0.5 ? '#c65b4a' : '#7a5a8a'
-  });
-}
-// tree positions, generated once
-const trees = [];
-for (let i = 0; i < 6; i++) {
-  trees.push({
-    x: Math.random(),
-    scale: 0.6 + Math.random() * 0.7,
-    sway: Math.random() * Math.PI * 2
-  });
-}
-// bird positions, generated once
-const birds = [];
-for (let i = 0; i < 4; i++) {
-  birds.push({
-    x: Math.random(),
-    y: 0.15 + Math.random() * 0.15,
-    speed: 0.02 + Math.random() * 0.02,
-    phase: Math.random() * 10
-  });
-}
-
 function drawGround() {
-  ctx.fillStyle = '#7bc65e'; // spring/summer green for now, we'll make this season-driven later
+  const idxA = Math.floor(seasonPos) % 4;
+  const idxB = (idxA + 1) % 4;
+  const t = seasonPos - Math.floor(seasonPos);
+  const groundColor = hexLerp(SEASON_COLORS.ground[idxA], SEASON_COLORS.ground[idxB], t);
+
+  ctx.fillStyle = groundColor;
   ctx.beginPath();
   ctx.moveTo(0, H * 0.78);
   ctx.quadraticCurveTo(W * 0.25, H * 0.72, W * 0.5, H * 0.76);
@@ -104,11 +150,9 @@ function drawHouses() {
     const hy = H * 0.72;
     const hh = hw * 0.8;
 
-    // body
     ctx.fillStyle = '#5a4a63';
     ctx.fillRect(hx, hy - hh, hw, hh);
 
-    // triangular roof
     ctx.fillStyle = h.roof;
     ctx.beginPath();
     ctx.moveTo(hx - 5, hy - hh);
@@ -117,14 +161,19 @@ function drawHouses() {
     ctx.closePath();
     ctx.fill();
 
-    // window, glowing warm if it's dusk/night
     const lit = sky.night || sky.dayProg < 0.25;
     ctx.fillStyle = lit ? 'rgba(255,214,140,0.9)' : 'rgba(60,50,70,0.5)';
     ctx.fillRect(hx + hw * 0.35, hy - hh * 0.55, hw * 0.3, hw * 0.3);
   });
 }
+
 function drawTrees() {
   const now = performance.now();
+  const idxA = Math.floor(seasonPos) % 4;
+  const idxB = (idxA + 1) % 4;
+  const t = seasonPos - Math.floor(seasonPos);
+  const foliage = hexLerp(SEASON_COLORS.foliage[idxA], SEASON_COLORS.foliage[idxB], t);
+  const foliageDark = hexLerp(SEASON_COLORS.foliageDark[idxA], SEASON_COLORS.foliageDark[idxB], t);
 
   trees.forEach((tr) => {
     const tx = tr.x * W;
@@ -132,7 +181,6 @@ function drawTrees() {
     const sway = Math.sin(now * 0.0006 + tr.sway) * 4;
     const th = 70 * tr.scale;
 
-    // trunk
     ctx.strokeStyle = '#5c4433';
     ctx.lineWidth = 6 * tr.scale;
     ctx.beginPath();
@@ -140,26 +188,26 @@ function drawTrees() {
     ctx.lineTo(tx + sway, ty - th);
     ctx.stroke();
 
-    // foliage — two overlapping blobs for a fuller look
-    ctx.fillStyle = '#3f8f4a';
+    ctx.fillStyle = foliage;
     ctx.beginPath();
     ctx.arc(tx + sway, ty - th, 30 * tr.scale, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#2b6a34';
+    ctx.fillStyle = foliageDark;
     ctx.beginPath();
     ctx.arc(tx + sway - 12 * tr.scale, ty - th + 8 * tr.scale, 18 * tr.scale, 0, Math.PI * 2);
     ctx.fill();
   });
 }
+
 function drawBirds() {
-  if (sky.night) return; // no birds at night
+  if (sky.night) return;
 
   const now = performance.now();
 
   birds.forEach((b) => {
     b.x += b.speed * 0.003;
-    if (b.x > 1.1) b.x = -0.1; // loop back around once it flies off screen
+    if (b.x > 1.1) b.x = -0.1;
 
     const bx = b.x * W;
     const by = b.y * H + Math.sin(now * 0.003 + b.phase) * 8;
@@ -174,13 +222,32 @@ function drawBirds() {
     ctx.stroke();
   });
 }
+
+const seasonLabel = document.getElementById('season-label');
+
 function animate() {
   requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min((now - lastFrame) / 1000, 0.1);
+  lastFrame = now;
+
+  idleTime += dt;
+  velocity *= 0.94;
+
+  const target = targetSeasonIndex();
+  const current = ((seasonPos % 4) + 4) % 4;
+  let diff = target - current;
+  if (diff > 2) diff -= 4;
+  if (diff < -2) diff += 4;
+  seasonPos = (current + diff * dt * 0.15 + 4) % 4;
+
   drawSky();
   drawSun();
   drawGround();
   drawHouses();
   drawTrees();
   drawBirds();
+
+  seasonLabel.textContent = SEASON_NAMES[Math.floor(seasonPos) % 4];
 }
 animate();
