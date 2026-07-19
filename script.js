@@ -67,3 +67,13 @@ for (let i = 0; i < 6; i++) {
   });
 }
 
+// birds, generated once
+const birds = [];
+for (let i = 0; i < 4; i++) {
+  birds.push({
+    x: Math.random(),
+    y: 0.15 + Math.random() * 0.15,
+    speed: 0.02 + Math.random() * 0.02,
+    phase: Math.random() * 10
+  });
+}
