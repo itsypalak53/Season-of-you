@@ -160,3 +160,10 @@ function drawHouses() {
     ctx.fillRect(hx + hw * 0.35, hy - hh * 0.55, hw * 0.3, hw * 0.3);
   });
 }
+function drawTrees() {
+  const now = performance.now();
+  const idxA = Math.floor(seasonPos) % 4;
+  const idxB = (idxA + 1) % 4;
+  const t = seasonPos - Math.floor(seasonPos);
+  const foliage = hexLerp(SEASON_COLORS.foliage[idxA], SEASON_COLORS.foliage[idxB], t);
+  const foliageDark = hexLerp(SEASON_COLORS.foliageDark[idxA], SEASON_COLORS.foliageDark[idxB], t);
