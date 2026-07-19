@@ -98,3 +98,14 @@ function targetSeasonIndex() {
   if (velocity > 22) return 1; // summer: energetic movement
   return 0;                    // spring: calm, gentle movement
 }
+function drawSky() {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, sky.top);
+  grad.addColorStop(1, sky.bottom);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawSun() {
+  const sunX = W * (0.15 + 0.7 * sky.dayProg);
+  const sunY = H * (0.55 - 0.4 * Math.sin(sky.dayProg * Math.PI));
