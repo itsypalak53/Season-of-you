@@ -86,3 +86,11 @@ let velocity = 0;
 let idleTime = 0;
 let lastFrame = performance.now();
 let seasonPos = 0;
+
+window.addEventListener('mousemove', (e) => {
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+  velocity = Math.min(Math.sqrt(dx * dx + dy * dy), 60);
+  lastMouse = { x: e.clientX, y: e.clientY };
+  idleTime = 0;
+});
