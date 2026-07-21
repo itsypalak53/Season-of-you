@@ -27,3 +27,15 @@ function hexLerp(hexA, hexB, t) {
   const bl = Math.round(ab + (bb - ab) * t);
   return `rgb(${r},${g},${bl})`;
 }
+function skyForHour(h) {
+  if (h >= 5 && h < 8) {
+    return { top: '#7a6aa8', bottom: '#f3b899', sun: '#ffd9a0', night: false, dayProg: (h - 5) / 3 };
+  }
+  if (h >= 8 && h < 17) {
+    return { top: '#6fb8e8', bottom: '#d9f0ff', sun: '#fff3c4', night: false, dayProg: 0.5 };
+  }
+  if (h >= 17 && h < 20) {
+    return { top: '#3a3466', bottom: '#e8895f', sun: '#ffb27a', night: false, dayProg: 1 - (h - 17) / 3 };
+  }
+  return { top: '#0b0a1e', bottom: '#1c1a38', sun: '#e6e6f0', night: true, dayProg: 0.5 };
+}
