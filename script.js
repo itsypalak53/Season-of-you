@@ -39,3 +39,23 @@ function skyForHour(h) {
   }
   return { top: '#0b0a1e', bottom: '#1c1a38', sun: '#e6e6f0', night: true, dayProg: 0.5 };
 }
+const hour = new Date().getHours();
+const sky = skyForHour(hour);
+
+const houses = [];
+for (let i = 0; i < 4; i++) {
+  houses.push({
+    x: 0.12 + i * 0.22 + Math.random() * 0.05,
+    w: 0.07 + Math.random() * 0.02,
+    roof: Math.random() > 0.5 ? '#c65b4a' : '#7a5a8a'
+  });
+}
+
+const trees = [];
+for (let i = 0; i < 6; i++) {
+  trees.push({
+    x: Math.random(),
+    scale: 0.6 + Math.random() * 0.7,
+    sway: Math.random() * Math.PI * 2
+  });
+}
