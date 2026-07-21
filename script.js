@@ -75,3 +75,14 @@ for (let i = 0; i < PCOUNT; i++) {
   particles.push({
     x: Math.random(),
     y: Math.random(),
+    speed: 0.3 + Math.random() * 0.5,
+    drift: Math.random() * Math.PI * 2,
+    size: 2 + Math.random() * 3
+  });
+}
+
+let lastMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+let velocity = 0;
+let idleTime = 0;
+let lastFrame = performance.now();
+let seasonPos = 0;
