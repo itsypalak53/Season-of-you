@@ -94,3 +94,17 @@ window.addEventListener('mousemove', (e) => {
   lastMouse = { x: e.clientX, y: e.clientY };
   idleTime = 0;
 });
+function targetSeasonIndex() {
+  if (idleTime > 14) return 3;
+  if (idleTime > 5) return 2;
+  if (velocity > 22) return 1;
+  return 0;
+}
+
+function drawSky() {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, sky.top);
+  grad.addColorStop(1, sky.bottom);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
