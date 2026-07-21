@@ -59,3 +59,19 @@ for (let i = 0; i < 6; i++) {
     sway: Math.random() * Math.PI * 2
   });
 }
+const birds = [];
+for (let i = 0; i < 4; i++) {
+  birds.push({
+    x: Math.random(),
+    y: 0.15 + Math.random() * 0.15,
+    speed: 0.02 + Math.random() * 0.02,
+    phase: Math.random() * 10
+  });
+}
+
+const PCOUNT = 90;
+const particles = [];
+for (let i = 0; i < PCOUNT; i++) {
+  particles.push({
+    x: Math.random(),
+    y: Math.random(),
