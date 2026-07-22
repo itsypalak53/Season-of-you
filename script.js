@@ -177,4 +177,21 @@ function drawTrees() {
     const ty = H * 0.79;
     const sway = Math.sin(now * 0.0006 + tr.sway) * 4;
     const th = 70 * tr.scale;
+ctx.strokeStyle = '#5c4433';
+    ctx.lineWidth = 6 * tr.scale;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx + sway, ty - th);
+    ctx.stroke();
 
+    ctx.fillStyle = foliage;
+    ctx.beginPath();
+    ctx.arc(tx + sway, ty - th, 30 * tr.scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = foliageDark;
+    ctx.beginPath();
+    ctx.arc(tx + sway - 12 * tr.scale, ty - th + 8 * tr.scale, 18 * tr.scale, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
