@@ -217,3 +217,26 @@ function drawBirds() {
     ctx.stroke();
     });
 }
+function drawParticles(dt) {
+  const now = performance.now();
+  const idxA = Math.floor(seasonPos) % 4;
+  const idxB = (idxA + 1) % 4;
+  const t = seasonPos - Math.floor(seasonPos);
+
+  const winterAmt = idxA === 3 ? (1 - t) : (idxB === 3 ? t : 0);
+  const foliage = hexLerp(SEASON_COLORS.foliage[idxA], SEASON_COLORS.foliage[idxB], t);
+  const particleColor = winterAmt > 0.3 ? 'rgba(255,255,255,0.85)' : foliage;
+
+  particles.forEach((p) => {
+    p.y += p.speed * dt * 0.05;
+    p.x += Math.sin(now * 0.0006 + p.drift) * 0.0006;
+
+    if (p.y > 1) p.y = -0.05;
+    if (p.x > 1) p.x -= 1;
+    if (p.x < 0) p.x += 1;
+     ctx.fillStyle = particleColor;
+    ctx.beginPath();
+    ctx.arc(p.x * W, p.y * H, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
