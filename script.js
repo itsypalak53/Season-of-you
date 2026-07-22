@@ -10,6 +10,7 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 resize();
+
 // season setup
 const SEASON_NAMES = ['spring', 'summer', 'autumn', 'winter'];
 const SEASON_COLORS = {
@@ -27,6 +28,7 @@ function hexLerp(hexA, hexB, t) {
   const bl = Math.round(ab + (bb - ab) * t);
   return `rgb(${r},${g},${bl})`;
 }
+
 function skyForHour(h) {
   if (h >= 5 && h < 8) {
     return { top: '#7a6aa8', bottom: '#f3b899', sun: '#ffd9a0', night: false, dayProg: (h - 5) / 3 };
@@ -39,6 +41,7 @@ function skyForHour(h) {
   }
   return { top: '#0b0a1e', bottom: '#1c1a38', sun: '#e6e6f0', night: true, dayProg: 0.5 };
 }
+
 const hour = new Date().getHours();
 const sky = skyForHour(hour);
 
@@ -59,6 +62,7 @@ for (let i = 0; i < 6; i++) {
     sway: Math.random() * Math.PI * 2
   });
 }
+
 const birds = [];
 for (let i = 0; i < 4; i++) {
   birds.push({
@@ -94,6 +98,7 @@ window.addEventListener('mousemove', (e) => {
   lastMouse = { x: e.clientX, y: e.clientY };
   idleTime = 0;
 });
+
 function targetSeasonIndex() {
   if (idleTime > 14) return 3;
   if (idleTime > 5) return 2;
@@ -108,6 +113,7 @@ function drawSky() {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 }
+
 function drawSun() {
   const sunX = W * (0.15 + 0.7 * sky.dayProg);
   const sunY = H * (0.55 - 0.4 * Math.sin(sky.dayProg * Math.PI));
@@ -125,6 +131,7 @@ function drawSun() {
   ctx.arc(sunX, sunY, 26, 0, Math.PI * 2);
   ctx.fill();
 }
+
 function drawGround() {
   const idxA = Math.floor(seasonPos) % 4;
   const idxB = (idxA + 1) % 4;
@@ -141,6 +148,7 @@ function drawGround() {
   ctx.closePath();
   ctx.fill();
 }
+
 function drawHouses() {
   houses.forEach((h) => {
     const hx = h.x * W;
@@ -164,6 +172,7 @@ function drawHouses() {
     ctx.fillRect(hx + hw * 0.35, hy - hh * 0.55, hw * 0.3, hw * 0.3);
   });
 }
+
 function drawTrees() {
   const now = performance.now();
   const idxA = Math.floor(seasonPos) % 4;
@@ -177,7 +186,8 @@ function drawTrees() {
     const ty = H * 0.79;
     const sway = Math.sin(now * 0.0006 + tr.sway) * 4;
     const th = 70 * tr.scale;
-ctx.strokeStyle = '#5c4433';
+
+    ctx.strokeStyle = '#5c4433';
     ctx.lineWidth = 6 * tr.scale;
     ctx.beginPath();
     ctx.moveTo(tx, ty);
@@ -195,6 +205,7 @@ ctx.strokeStyle = '#5c4433';
     ctx.fill();
   });
 }
+
 function drawBirds() {
   if (sky.night) return;
 
@@ -215,8 +226,9 @@ function drawBirds() {
     ctx.lineTo(bx, by - 3);
     ctx.lineTo(bx + 8, by + flap);
     ctx.stroke();
-    });
+  });
 }
+
 function drawParticles(dt) {
   const now = performance.now();
   const idxA = Math.floor(seasonPos) % 4;
@@ -234,12 +246,14 @@ function drawParticles(dt) {
     if (p.y > 1) p.y = -0.05;
     if (p.x > 1) p.x -= 1;
     if (p.x < 0) p.x += 1;
-     ctx.fillStyle = particleColor;
+
+    ctx.fillStyle = particleColor;
     ctx.beginPath();
     ctx.arc(p.x * W, p.y * H, p.size, 0, Math.PI * 2);
     ctx.fill();
   });
 }
+
 const seasonLabel = document.getElementById('season-label');
 
 function animate() {
@@ -269,12 +283,3 @@ function animate() {
   seasonLabel.textContent = SEASON_NAMES[Math.floor(seasonPos) % 4];
 }
 animate();
-
-Replace your script.js with this whole thing, save, refresh, and you should have the complete scene: sky, sun/moon, houses, trees, birds, and falling particles all reacting to the season. Push it:
-
-bash
-git add .
-git commit -m "complete scene with particles"
-git push
-
-Once you've confirmed it all works, want to move on to polish — hiding the debug season-label, adding the caption fade-in logic (it's referenced in your HTML but we haven't wired up the JS for it yet), or the AI-generated poetic captions we discussed earlier?
