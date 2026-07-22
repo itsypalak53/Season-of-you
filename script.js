@@ -19,6 +19,29 @@ const SEASON_COLORS = {
   ground:      ['#bfe3a0', '#7bc65e', '#c9955a', '#eef2f5']
 };
 
+const CAPTIONS = {
+  spring: [
+    'stay a while and the seasons will turn',
+    'something is beginning to bloom',
+    'the air remembers how to be gentle'
+  ],
+  summer: [
+    'you moved, and the world grew warmer',
+    'everything is a little more alive now',
+    'the light is stretching itself thin'
+  ],
+  autumn: [
+    'the trees are letting go, slowly',
+    'stillness has its own kind of color',
+    'something in you has started to settle'
+  ],
+  winter: [
+    'it grew quiet, so the snow came',
+    'the world is resting, and so are you',
+    'even stillness has a season'
+  ]
+};
+
 function hexLerp(hexA, hexB, t) {
   const a = parseInt(hexA.slice(1), 16), b = parseInt(hexB.slice(1), 16);
   const ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
@@ -291,6 +314,9 @@ function animate() {
     calmTimer = now;
   }
   if (!captionShown && now - calmTimer > 6000) {
+    const currentSeason = SEASON_NAMES[Math.floor(seasonPos) % 4];
+    const lines = CAPTIONS[currentSeason];
+    caption.textContent = lines[Math.floor(Math.random() * lines.length)];
     caption.style.opacity = '1';
     captionShown = true;
     setTimeout(() => { caption.style.opacity = '0'; }, 7000);
