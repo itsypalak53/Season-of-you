@@ -108,3 +108,20 @@ function drawSky() {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 }
+function drawSun() {
+  const sunX = W * (0.15 + 0.7 * sky.dayProg);
+  const sunY = H * (0.55 - 0.4 * Math.sin(sky.dayProg * Math.PI));
+
+  const glow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 90);
+  glow.addColorStop(0, sky.sun);
+  glow.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, 90, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = sky.sun;
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, 26, 0, Math.PI * 2);
+  ctx.fill();
+}
