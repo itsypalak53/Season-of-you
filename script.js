@@ -240,3 +240,41 @@ function drawParticles(dt) {
     ctx.fill();
   });
 }
+const seasonLabel = document.getElementById('season-label');
+
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min((now - lastFrame) / 1000, 0.1);
+  lastFrame = now;
+
+  idleTime += dt;
+  velocity *= 0.94;
+
+  const target = targetSeasonIndex();
+  const current = ((seasonPos % 4) + 4) % 4;
+  let diff = target - current;
+  if (diff > 2) diff -= 4;
+  if (diff < -2) diff += 4;
+  seasonPos = (current + diff * dt * 0.15 + 4) % 4;
+
+  drawSky();
+  drawSun();
+  drawGround();
+  drawHouses();
+  drawTrees();
+  drawBirds();
+  drawParticles(dt);
+
+  seasonLabel.textContent = SEASON_NAMES[Math.floor(seasonPos) % 4];
+}
+animate();
+
+Replace your script.js with this whole thing, save, refresh, and you should have the complete scene: sky, sun/moon, houses, trees, birds, and falling particles all reacting to the season. Push it:
+
+bash
+git add .
+git commit -m "complete scene with particles"
+git push
+
+Once you've confirmed it all works, want to move on to polish — hiding the debug season-label, adding the caption fade-in logic (it's referenced in your HTML but we haven't wired up the JS for it yet), or the AI-generated poetic captions we discussed earlier?
