@@ -91,6 +91,10 @@ let idleTime = 0;
 let lastFrame = performance.now();
 let seasonPos = 0;
 
+let calmTimer = performance.now();
+let captionShown = false;
+const caption = document.getElementById('caption');
+
 window.addEventListener('mousemove', (e) => {
   const dx = e.clientX - lastMouse.x;
   const dy = e.clientY - lastMouse.y;
@@ -281,5 +285,15 @@ function animate() {
   drawParticles(dt);
 
   seasonLabel.textContent = SEASON_NAMES[Math.floor(seasonPos) % 4];
+
+  // caption fade-in: only show once, after a stretch of calm
+  if (velocity < 2 && idleTime < 1) {
+    calmTimer = now;
+  }
+  if (!captionShown && now - calmTimer > 6000) {
+    caption.style.opacity = '1';
+    captionShown = true;
+    setTimeout(() => { caption.style.opacity = '0'; }, 7000);
+  }
 }
 animate();
