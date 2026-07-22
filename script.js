@@ -125,3 +125,19 @@ function drawSun() {
   ctx.arc(sunX, sunY, 26, 0, Math.PI * 2);
   ctx.fill();
 }
+function drawGround() {
+  const idxA = Math.floor(seasonPos) % 4;
+  const idxB = (idxA + 1) % 4;
+  const t = seasonPos - Math.floor(seasonPos);
+  const groundColor = hexLerp(SEASON_COLORS.ground[idxA], SEASON_COLORS.ground[idxB], t);
+
+  ctx.fillStyle = groundColor;
+  ctx.beginPath();
+  ctx.moveTo(0, H * 0.78);
+  ctx.quadraticCurveTo(W * 0.25, H * 0.72, W * 0.5, H * 0.76);
+  ctx.quadraticCurveTo(W * 0.75, H * 0.8, W, H * 0.74);
+  ctx.lineTo(W, H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  ctx.fill();
+}
