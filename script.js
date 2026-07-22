@@ -141,3 +141,20 @@ function drawGround() {
   ctx.closePath();
   ctx.fill();
 }
+function drawHouses() {
+  houses.forEach((h) => {
+    const hx = h.x * W;
+    const hw = h.w * W;
+    const hy = H * 0.72;
+    const hh = hw * 0.8;
+
+    ctx.fillStyle = '#5a4a63';
+    ctx.fillRect(hx, hy - hh, hw, hh);
+
+    ctx.fillStyle = h.roof;
+    ctx.beginPath();
+    ctx.moveTo(hx - 5, hy - hh);
+    ctx.lineTo(hx + hw / 2, hy - hh - hw * 0.5);
+    ctx.lineTo(hx + hw + 5, hy - hh);
+    ctx.closePath();
+    ctx.fill();
