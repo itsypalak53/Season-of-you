@@ -195,3 +195,25 @@ ctx.strokeStyle = '#5c4433';
     ctx.fill();
   });
 }
+function drawBirds() {
+  if (sky.night) return;
+
+  const now = performance.now();
+
+  birds.forEach((b) => {
+    b.x += b.speed * 0.003;
+    if (b.x > 1.1) b.x = -0.1;
+
+    const bx = b.x * W;
+    const by = b.y * H + Math.sin(now * 0.003 + b.phase) * 8;
+    const flap = Math.sin(now * 0.01 + b.phase) * 6;
+
+    ctx.strokeStyle = 'rgba(40,30,50,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bx - 8, by + flap);
+    ctx.lineTo(bx, by - 3);
+    ctx.lineTo(bx + 8, by + flap);
+    ctx.stroke();
+    });
+}
