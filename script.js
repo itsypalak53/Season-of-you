@@ -23,22 +23,50 @@ const CAPTIONS = {
   spring: [
     'stay a while and the seasons will turn',
     'something is beginning to bloom',
-    'the air remembers how to be gentle'
+    'the air remembers how to be gentle',
+    'soft things are waking up again',
+    'even the light feels new here',
+    'a quiet kind of beginning',
+    'the world is trying again',
+    'something small is unfolding',
+    'the ground is warm with waiting',
+    'everything gentle starts here'
   ],
   summer: [
     'you moved, and the world grew warmer',
     'everything is a little more alive now',
-    'the light is stretching itself thin'
+    'the light is stretching itself thin',
+    'the day is wide awake',
+    'warmth has a way of spreading',
+    'you brought the heat with you',
+    'the air is humming louder now',
+    'nothing here is standing still',
+    'the light doesn\'t want to leave',
+    'this is what motion feels like'
   ],
   autumn: [
     'the trees are letting go, slowly',
     'stillness has its own kind of color',
-    'something in you has started to settle'
+    'something in you has started to settle',
+    'the light is turning gold and tired',
+    'things are falling, gently, on purpose',
+    'the air smells like an ending',
+    'quiet has started to arrive',
+    'the year is exhaling',
+    'everything is turning inward now',
+    'this is what slowing down looks like'
   ],
   winter: [
     'it grew quiet, so the snow came',
     'the world is resting, and so are you',
-    'even stillness has a season'
+    'even stillness has a season',
+    'the cold has its own kind of calm',
+    'everything is holding its breath',
+    'the quiet finally arrived',
+    'this is what rest looks like',
+    'the world went soft and white',
+    'nothing is asking anything of you',
+    'stillness settled in, and stayed'
   ]
 };
 
@@ -310,9 +338,6 @@ function animate() {
   seasonLabel.textContent = SEASON_NAMES[Math.floor(seasonPos) % 4];
 
   // caption fade-in: only show once, after a stretch of calm
-  if (velocity < 2 && idleTime < 1) {
-    calmTimer = now;
-  }
   if (!captionShown && now - calmTimer > 6000) {
     const currentSeason = SEASON_NAMES[Math.floor(seasonPos) % 4];
     const lines = CAPTIONS[currentSeason];
@@ -320,6 +345,10 @@ function animate() {
     caption.style.opacity = '1';
     captionShown = true;
     setTimeout(() => { caption.style.opacity = '0'; }, 7000);
+  }
+
+  if (velocity < 2 && idleTime < 1) {
+    calmTimer = now;
   }
 }
 animate();
