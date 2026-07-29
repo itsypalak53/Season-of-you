@@ -74,4 +74,78 @@ html, body {
   color: rgba(255,255,255,0.65);
   margin-top: 6px;
 }
+#forecast-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  background: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 28px;
+  padding: 34px 40px;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: Georgia, 'Times New Roman', serif;
+  text-align: center;
+  min-width: 300px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3), 0 0 60px rgba(255, 220, 180, 0.06);
+  animation: cardFloat 6s ease-in-out infinite, cardArrive 1.6s ease;
+}
+
+@keyframes cardFloat {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+  50% { transform: translate(-50%, -50%) translateY(-8px); }
+}
+
+@keyframes cardArrive {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+#forecast-current-temp {
+  font-size: 52px;
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0 30px rgba(255, 230, 190, 0.3);
+}
+
+#forecast-current-desc {
+  font-style: italic;
+  font-size: 14px;
+  opacity: 0.7;
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+
+#forecast-days {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.forecast-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.forecast-day-icon {
+  margin: 8px 0;
+}
+
+.forecast-day-temps {
+  font-size: 11px;
+  opacity: 0.65;
+  font-style: normal;
+}
+
 }
