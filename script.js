@@ -75,42 +75,158 @@ function showWeatherIntro(tempC, code) {
   }, 3200);
 }
 
-function renderForecastCard(current, daily) {
+function getMoonPhase() {
+  const phases = ['🌑 new moon', '🌒 waxing crescent', '🌓 first quarter', '🌔 waxing gibbous', '🌕 full moon', '🌖 waning gibbous', '🌗 last quarter', '🌘 waning crescent'];
+  const knownNewMoon = new Date('2024-01-11');
+  const daysSince = (new Date() - knownNewMoon) / (1000 * 60 * 60 * 24);
+  const cycle = 29.53;
+  const phaseIndex = Math.floor(((daysSince % cycle) / cycle) * 8) % 8;
+  return phases[phaseIndex];
+}
+
+function aqiLabel(aqi) {
+  if (aqi <= 50) return 'good';
+  if (aqi <= 100) return 'moderate';
+  if (aqi <= 150) return 'unhealthy for sensitive groups';
+  return 'unhealthy';
+}
+
+function renderForecastCard(current, daily, aqi) {
   const card = document.getElementById('forecast-card');
 
   let daysHtml = '';
   for (let i = 1; i <= 4 && i < daily.time.length; i++) {
     const date = new Date(daily.time[i]);
     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-    const icon = weatherIconSVG(daily.weathercode[i], 26);
+    const icon = weatherIconSVG(daily.weather_code[i], 26);
     const max = Math.round(daily.temperature_2m_max[i]);
     const min = Math.round(daily.temperature_2m_min[i]);
+    const desc = WEATHER_DESCRIPTIONS[daily.weather_code[i]] || 'clear';
+    const rainChance = daily.precipitation_probability_max[i];
+    const wind = Math.round(daily.wind_speed_10m_max[i]);
+
     daysHtml += `
       <div class="forecast-day">
         <div>${dayName}</div>
-        <div class="forecast-day-icon">${icon}</div>
+        <div class="forecast-day-icon weather-icon-anim">${icon}</div>
         <div class="forecast-day-temps">${max}° / ${min}°</div>
+        <div class="forecast-day-desc">${desc}</div>
+        <div class="forecast-day-extra">☔ ${rainChance}% · 💨 ${wind}km/h</div>
       </div>
     `;
   }
 
+  const aqiHtml = aqi != null
+    ? `<div class="stat"><span class="stat-label">air quality</span><span class="stat-value">${Math.round(aqi)} · ${aqiLabel(aqi)}</span></div>`
+    : '';
+
+  const moonHtml = sky.night ? `<div id="forecast-moon">${getMoonPhase()}</div>` : '';
+
   card.innerHTML = `
-    <div id="forecast-current-temp">${weatherIconSVG(current.weathercode, 40)} ${Math.round(current.temperature)}°</div>
-    <div id="forecast-current-desc">${WEATHER_DESCRIPTIONS[current.weathercode] || 'clear skies'}</div>
+    <div id="forecast-current-temp" class="weather-icon-anim">${weatherIconSVG(current.weather_code, 40)} ${Math.round(current.temperature_2m)}°</div>
+    <div id="forecast-current-desc">${WEATHER_DESCRIPTIONS[current.weather_code] || 'clear skies'}</div>
+    ${moonHtml}
+    <div id="forecast-historical"></div>
+
+    <div id="forecast-stats">
+      <div class="stat"><span class="stat-label">feels like</span><span class="stat-value">${Math.round(current.apparent_temperature)}°</span></div>
+      <div class="stat"><span class="stat-label">humidity</span><span class="stat-value">${current.relative_humidity_2m}%</span></div>
+      <div class="stat"><span class="stat-label">wind</span><span class="stat-value">${Math.round(current.wind_speed_10m)} km/h</span></div>
+      <div class="stat"><span class="stat-label">pressure</span><span class="stat-value">${Math.round(current.surface_pressure)} hPa</span></div>
+      ${aqiHtml}
+    </div>
+
     <div id="forecast-days">${daysHtml}</div>
   `;
 }
 
-function fetchRealWeather(lat, lon) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto`;
+function fetchHistoricalComparison(lat, lon, todayTemp) {
+  const today = new Date();
+  const lastYear = new Date(today);
+  lastYear.setFullYear(today.getFullYear() - 1);
+  const dateStr = lastYear.toISOString().split('T')[0];
+
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${dateStr}&end_date=${dateStr}&daily=temperature_2m_max&timezone=auto`;
 
   fetch(url)
     .then((res) => res.json())
     .then((data) => {
-      const cw = data.current_weather;
-      realWeather = { code: cw.weathercode, temp: cw.temperature, isDay: cw.is_day === 1 };
-      showWeatherIntro(cw.temperature, cw.weathercode);
-      renderForecastCard(cw, data.daily);
+      const pastTemp = data.daily.temperature_2m_max[0];
+      if (pastTemp == null) return;
+
+      const diff = Math.round(todayTemp - pastTemp);
+      let line;
+      if (diff > 0) {
+        line = `a year ago today, it was ${Math.abs(diff)}° cooler here`;
+      } else if (diff < 0) {
+        line = `a year ago today, it was ${Math.abs(diff)}° warmer here`;
+      } else {
+        line = `a year ago today, it felt just like this`;
+      }
+
+      const el = document.getElementById('forecast-historical');
+      if (el) el.textContent = line;
+    })
+    .catch(() => {});
+}
+
+function skyForHour(h) {
+  if (h >= 5 && h < 8) {
+    return { top: '#7a6aa8', bottom: '#f3b899', sun: '#ffd9a0', night: false, dayProg: (h - 5) / 3 };
+  }
+  if (h >= 8 && h < 17) {
+    return { top: '#6fb8e8', bottom: '#d9f0ff', sun: '#fff3c4', night: false, dayProg: 0.5 };
+  }
+  if (h >= 17 && h < 20) {
+    return { top: '#3a3466', bottom: '#e8895f', sun: '#ffb27a', night: false, dayProg: 1 - (h - 17) / 3 };
+  }
+  return { top: '#0b0a1e', bottom: '#1c1a38', sun: '#e6e6f0', night: true, dayProg: 0.5 };
+}
+
+function skyFromRealSun(sunriseStr, sunsetStr) {
+  const now = new Date();
+  const sunrise = new Date(sunriseStr);
+  const sunset = new Date(sunsetStr);
+  const isNight = now < sunrise || now > sunset;
+
+  if (isNight) {
+    return { top: '#0b0a1e', bottom: '#1c1a38', sun: '#e6e6f0', night: true, dayProg: 0.5 };
+  }
+
+  const dayProg = Math.max(0, Math.min((now - sunrise) / (sunset - sunrise), 1));
+
+  if (dayProg < 0.12) {
+    return { top: '#7a6aa8', bottom: '#f3b899', sun: '#ffd9a0', night: false, dayProg: dayProg / 0.12 };
+  }
+  if (dayProg > 0.88) {
+    return { top: '#3a3466', bottom: '#e8895f', sun: '#ffb27a', night: false, dayProg: 1 - (dayProg - 0.88) / 0.12 };
+  }
+  return { top: '#6fb8e8', bottom: '#d9f0ff', sun: '#fff3c4', night: false, dayProg: dayProg };
+}
+
+const hour = new Date().getHours();
+let sky = skyForHour(hour); // fallback until real sunrise/sunset data arrives
+
+function fetchRealWeather(lat, lon) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,sunrise,sunset&timezone=auto`;
+  const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`;
+
+  fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      const cw = data.current;
+      realWeather = { code: cw.weather_code, temp: cw.temperature_2m, isDay: true };
+      sky = skyFromRealSun(data.daily.sunrise[0], data.daily.sunset[0]);
+      showWeatherIntro(cw.temperature_2m, cw.weather_code);
+      renderForecastCard(cw, data.daily, null);
+      fetchHistoricalComparison(lat, lon, cw.temperature_2m);
+
+      fetch(aqUrl)
+        .then((r) => r.json())
+        .then((aqData) => {
+          renderForecastCard(cw, data.daily, aqData.current.us_aqi);
+        })
+        .catch(() => {});
     })
     .catch(() => {
       document.getElementById('weather-intro').style.opacity = '0';
@@ -196,22 +312,6 @@ function hexLerp(hexA, hexB, t) {
   const bl = Math.round(ab + (bb - ab) * t);
   return `rgb(${r},${g},${bl})`;
 }
-
-function skyForHour(h) {
-  if (h >= 5 && h < 8) {
-    return { top: '#7a6aa8', bottom: '#f3b899', sun: '#ffd9a0', night: false, dayProg: (h - 5) / 3 };
-  }
-  if (h >= 8 && h < 17) {
-    return { top: '#6fb8e8', bottom: '#d9f0ff', sun: '#fff3c4', night: false, dayProg: 0.5 };
-  }
-  if (h >= 17 && h < 20) {
-    return { top: '#3a3466', bottom: '#e8895f', sun: '#ffb27a', night: false, dayProg: 1 - (h - 17) / 3 };
-  }
-  return { top: '#0b0a1e', bottom: '#1c1a38', sun: '#e6e6f0', night: true, dayProg: 0.5 };
-}
-
-const hour = new Date().getHours();
-const sky = skyForHour(hour);
 
 const houses = [];
 for (let i = 0; i < 4; i++) {
