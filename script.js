@@ -1,3 +1,67 @@
+// ---- real weather layer ----
+let realWeather = { code: 0, temp: null, isDay: true }; // default: clear day, until we know better
+
+const WEATHER_DESCRIPTIONS = {
+  0: 'clear sky above you',
+  1: 'mostly clear',
+  2: 'a few clouds drifting by',
+  3: 'the sky is overcast',
+  45: 'fog is rolling in',
+  48: 'fog is rolling in',
+  51: 'a light drizzle',
+  53: 'a gentle rain',
+  55: 'steady rain',
+  61: 'light rain falling',
+  63: 'rain falling',
+  65: 'heavy rain falling',
+  71: 'light snow falling',
+  73: 'snow falling',
+  75: 'heavy snow falling',
+  80: 'passing showers',
+  95: 'a storm is passing through',
+  96: 'a storm is passing through',
+  99: 'a storm is passing through'
+};
+
+function showWeatherIntro(tempC, code) {
+  const intro = document.getElementById('weather-intro');
+  const tempEl = document.getElementById('weather-temp');
+  const descEl = document.getElementById('weather-desc');
+
+  tempEl.textContent = `${Math.round(tempC)}°`;
+  descEl.textContent = WEATHER_DESCRIPTIONS[code] || 'the sky above you, right now';
+
+  setTimeout(() => {
+    intro.style.opacity = '0';
+  }, 3200);
+}
+
+function fetchRealWeather(lat, lon) {
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
+    .then((res) => res.json())
+    .then((data) => {
+      const cw = data.current_weather;
+      realWeather = { code: cw.weathercode, temp: cw.temperature, isDay: cw.is_day === 1 };
+      showWeatherIntro(cw.temperature, cw.weathercode);
+    })
+    .catch(() => {
+      document.getElementById('weather-intro').style.opacity = '0';
+    });
+}
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    (pos) => fetchRealWeather(pos.coords.latitude, pos.coords.longitude),
+    () => {
+      // permission denied or failed — just fade out gracefully, no real weather layer
+      document.getElementById('weather-intro').style.opacity = '0';
+    }
+  );
+} else {
+  document.getElementById('weather-intro').style.opacity = '0';
+}
+
+
 // grab our canvas and its 2D drawing context
 const canvas = document.getElementById('scene');
 const ctx = canvas.getContext('2d');
