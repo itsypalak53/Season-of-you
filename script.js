@@ -1,5 +1,18 @@
+// grab our canvas and its 2D drawing context
+const canvas = document.getElementById('scene');
+const ctx = canvas.getContext('2d');
+
+let W, H;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
 // ---- real weather layer ----
-let realWeather = { code: 0, temp: null, isDay: true }; // default: clear day, until we know better
+let realWeather = { code: 0, temp: null, isDay: true };
 
 const WEATHER_DESCRIPTIONS = {
   0: 'clear sky above you',
@@ -53,27 +66,12 @@ if (navigator.geolocation) {
   navigator.geolocation.getCurrentPosition(
     (pos) => fetchRealWeather(pos.coords.latitude, pos.coords.longitude),
     () => {
-      // permission denied or failed — just fade out gracefully, no real weather layer
       document.getElementById('weather-intro').style.opacity = '0';
     }
   );
 } else {
   document.getElementById('weather-intro').style.opacity = '0';
 }
-
-
-// grab our canvas and its 2D drawing context
-const canvas = document.getElementById('scene');
-const ctx = canvas.getContext('2d');
-
-let W, H;
-
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
 
 // season setup
 const SEASON_NAMES = ['spring', 'summer', 'autumn', 'winter'];
@@ -199,6 +197,30 @@ for (let i = 0; i < PCOUNT; i++) {
     size: 2 + Math.random() * 3
   });
 }
+
+// real-weather visual layers
+const clouds = [];
+for (let i = 0; i < 5; i++) {
+  clouds.push({ x: Math.random(), y: 0.08 + Math.random() * 0.15, scale: 0.8 + Math.random() * 0.6, speed: 0.01 + Math.random() * 0.01 });
+}
+
+const rainDrops = [];
+for (let i = 0; i < 150; i++) {
+  rainDrops.push({ x: Math.random(), y: Math.random(), len: 10 + Math.random() * 15, speed: 4 + Math.random() * 3 });
+}
+
+const snowFlakes = [];
+for (let i = 0; i < 100; i++) {
+  snowFlakes.push({ x: Math.random(), y: Math.random(), speed: 0.15 + Math.random() * 0.2, drift: Math.random() * Math.PI * 2, size: 2 + Math.random() * 2 });
+}
+
+let lightningFlash = 0;
+let lightningTimer = 3;
+
+function isRainyCode(c)  { return [51, 53, 55, 61, 63, 65, 80].includes(c); }
+function isSnowyCode(c)  { return [71, 73, 75].includes(c); }
+function isCloudyCode(c) { return c >= 2; }
+function isStormCode(c)  { return [95, 96, 99].includes(c); }
 
 let lastMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 let velocity = 0;
@@ -373,6 +395,66 @@ function drawParticles(dt) {
   });
 }
 
+function drawClouds(dt) {
+  if (!isCloudyCode(realWeather.code)) return;
+  clouds.forEach((c) => {
+    c.x += c.speed * dt * 0.02;
+    if (c.x > 1.3) c.x = -0.3;
+    const cx = c.x * W, cy = c.y * H, r = 90 * c.scale;
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, r, r * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + r * 0.5, cy + 5, r * 0.7, r * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawRealRain(dt) {
+  if (!isRainyCode(realWeather.code) && !isStormCode(realWeather.code)) return;
+  ctx.strokeStyle = 'rgba(180,200,230,0.5)';
+  ctx.lineWidth = 1;
+  rainDrops.forEach((d) => {
+    d.y += d.speed * dt;
+    if (d.y > 1) { d.y = -0.05; d.x = Math.random(); }
+    const x = d.x * W, y = d.y * H;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - 3, y + d.len);
+    ctx.stroke();
+  });
+}
+
+function drawRealSnow(dt) {
+  if (!isSnowyCode(realWeather.code)) return;
+  const now = performance.now();
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  snowFlakes.forEach((f) => {
+    f.y += f.speed * dt * 0.05;
+    f.x += Math.sin(now * 0.0005 + f.drift) * 0.0004;
+    if (f.y > 1) f.y = -0.05;
+    ctx.beginPath();
+    ctx.arc(f.x * W, f.y * H, f.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawLightning(dt) {
+  if (!isStormCode(realWeather.code)) return;
+  lightningTimer -= dt;
+  if (lightningTimer <= 0) {
+    lightningFlash = 1;
+    lightningTimer = 4 + Math.random() * 6;
+  }
+  if (lightningFlash > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${lightningFlash * 0.4})`;
+    ctx.fillRect(0, 0, W, H);
+    lightningFlash -= dt * 2;
+    if (lightningFlash < 0) lightningFlash = 0;
+  }
+}
+
 const seasonLabel = document.getElementById('season-label');
 
 function animate() {
@@ -398,10 +480,13 @@ function animate() {
   drawTrees();
   drawBirds();
   drawParticles(dt);
+  drawClouds(dt);
+  drawRealRain(dt);
+  drawRealSnow(dt);
+  drawLightning(dt);
 
   seasonLabel.textContent = SEASON_NAMES[Math.floor(seasonPos) % 4];
 
-  // caption fade-in: only show once, after a stretch of calm
   if (!captionShown && now - calmTimer > 6000) {
     const currentSeason = SEASON_NAMES[Math.floor(seasonPos) % 4];
     const lines = CAPTIONS[currentSeason];
