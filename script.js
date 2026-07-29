@@ -36,6 +36,32 @@ const WEATHER_DESCRIPTIONS = {
   99: 'a storm is passing through'
 };
 
+function weatherIconSVG(code, size) {
+  const s = size || 22;
+  if (code === 0) {
+    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><circle cx="20" cy="20" r="10" fill="#ffe6b0"/><circle cx="20" cy="20" r="16" fill="#ffe6b0" opacity="0.25"/></svg>`;
+  }
+  if (code === 1 || code === 2) {
+    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><circle cx="16" cy="16" r="8" fill="#ffe6b0" opacity="0.8"/><ellipse cx="22" cy="24" rx="14" ry="8" fill="#ffffff" opacity="0.85"/></svg>`;
+  }
+  if (code === 3) {
+    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="15" ry="9" fill="#ffffff" opacity="0.8"/><ellipse cx="14" cy="16" rx="9" ry="6" fill="#ffffff" opacity="0.6"/></svg>`;
+  }
+  if (code === 45 || code === 48) {
+    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><rect x="6" y="14" width="28" height="2.5" rx="1.5" fill="#ffffff" opacity="0.6"/><rect x="10" y="20" width="20" height="2.5" rx="1.5" fill="#ffffff" opacity="0.5"/><rect x="8" y="26" width="24" height="2.5" rx="1.5" fill="#ffffff" opacity="0.6"/></svg>`;
+  }
+  if ([51, 53, 55, 61, 63, 65, 80].includes(code)) {
+    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><ellipse cx="20" cy="14" rx="13" ry="8" fill="#ffffff" opacity="0.8"/><line x1="14" y1="26" x2="11" y2="34" stroke="#bcd8ff" stroke-width="2" stroke-linecap="round"/><line x1="21" y1="26" x2="18" y2="34" stroke="#bcd8ff" stroke-width="2" stroke-linecap="round"/><line x1="28" y1="26" x2="25" y2="34" stroke="#bcd8ff" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+  if ([71, 73, 75].includes(code)) {
+    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><ellipse cx="20" cy="14" rx="13" ry="8" fill="#ffffff" opacity="0.85"/><circle cx="14" cy="28" r="2" fill="#ffffff"/><circle cx="20" cy="32" r="2" fill="#ffffff"/><circle cx="26" cy="28" r="2" fill="#ffffff"/></svg>`;
+  }
+  if ([95, 96, 99].includes(code)) {
+    return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><ellipse cx="20" cy="13" rx="13" ry="8" fill="#cfc9d8" opacity="0.9"/><polygon points="20,22 15,30 19,30 16,36 25,26 20,26" fill="#ffe6b0"/></svg>`;
+  }
+  return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><circle cx="20" cy="20" r="10" fill="#ffe6b0" opacity="0.7"/></svg>`;
+}
+
 function showWeatherIntro(tempC, code) {
   const intro = document.getElementById('weather-intro');
   const tempEl = document.getElementById('weather-temp');
@@ -49,13 +75,42 @@ function showWeatherIntro(tempC, code) {
   }, 3200);
 }
 
+function renderForecastCard(current, daily) {
+  const card = document.getElementById('forecast-card');
+
+  let daysHtml = '';
+  for (let i = 1; i <= 4 && i < daily.time.length; i++) {
+    const date = new Date(daily.time[i]);
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const icon = weatherIconSVG(daily.weathercode[i], 26);
+    const max = Math.round(daily.temperature_2m_max[i]);
+    const min = Math.round(daily.temperature_2m_min[i]);
+    daysHtml += `
+      <div class="forecast-day">
+        <div>${dayName}</div>
+        <div class="forecast-day-icon">${icon}</div>
+        <div class="forecast-day-temps">${max}° / ${min}°</div>
+      </div>
+    `;
+  }
+
+  card.innerHTML = `
+    <div id="forecast-current-temp">${weatherIconSVG(current.weathercode, 40)} ${Math.round(current.temperature)}°</div>
+    <div id="forecast-current-desc">${WEATHER_DESCRIPTIONS[current.weathercode] || 'clear skies'}</div>
+    <div id="forecast-days">${daysHtml}</div>
+  `;
+}
+
 function fetchRealWeather(lat, lon) {
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto`;
+
+  fetch(url)
     .then((res) => res.json())
     .then((data) => {
       const cw = data.current_weather;
       realWeather = { code: cw.weathercode, temp: cw.temperature, isDay: cw.is_day === 1 };
       showWeatherIntro(cw.temperature, cw.weathercode);
+      renderForecastCard(cw, data.daily);
     })
     .catch(() => {
       document.getElementById('weather-intro').style.opacity = '0';
@@ -198,7 +253,6 @@ for (let i = 0; i < PCOUNT; i++) {
   });
 }
 
-// real-weather visual layers
 const clouds = [];
 for (let i = 0; i < 5; i++) {
   clouds.push({ x: Math.random(), y: 0.08 + Math.random() * 0.15, scale: 0.8 + Math.random() * 0.6, speed: 0.01 + Math.random() * 0.01 });
